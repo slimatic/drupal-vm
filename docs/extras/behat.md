@@ -34,46 +34,48 @@ Using the default Drupal site as an example (it's installed in `/var/www/drupal`
 
   1. Create a `behat.yml` file inside the docroot of your site (e.g. create this file alongside the rest of the Drupal codebase at `/var/www/drupal/behat.yml`), with the following contents:
 
-    ```
-    default:
-      suites:
-        web_features:
-          paths: [ %paths.base%/features/web ]
-          contexts: [ WebContext ]
-      extensions:
-        Behat\MinkExtension:
-          goutte: ~
-          javascript_session: selenium2
-          selenium2:
-            wd_host: http://drupalvm.dev:4444/wd/hub
-          base_url: http://drupalvm.dev
-        Drupal\DrupalExtension:
-          blackbox: ~
-          api_driver: 'drupal'
-          drupal:
-            drupal_root: '/var/www/drupal'
-    ```
-  
+        default:
+          suites:
+            web_features:
+              paths: [ %paths.base%/features/web ]
+              contexts:
+                - WebContext
+                - Drupal\DrupalExtension\Context\DrupalContext
+                - Drupal\DrupalExtension\Context\MinkContext
+                - Drupal\DrupalExtension\Context\MessageContext
+                - Drupal\DrupalExtension\Context\DrushContext
+          extensions:
+            Behat\MinkExtension:
+              goutte: ~
+              javascript_session: selenium2
+              selenium2:
+                wd_host: http://drupalvm.dev:4444/wd/hub
+              base_url: http://drupalvm.dev
+            Drupal\DrupalExtension:
+              blackbox: ~
+              api_driver: 'drupal'
+              drupal:
+                drupal_root: '/var/www/drupal'
+              region_map:
+                content: "#content"
+
   2. Log into Drupal VM with `vagrant ssh`, change directory to the Drupal site root (`cd /var/www/drupal`), then run `behat --init` to initialize the `features` folder where you will place test cases.
-  3. From either inside the VM or on the host machine, open up the new `features` folder Behat just created, and create a new `drupal` folder inside. Inside _that_ folder, create `HomeContent.feature` with the following contents:
+  3. From either inside the VM or on the host machine, open up the new `features/web` folder Behat just created. Inside _that_ folder, create `HomeContent.feature` with the following contents:
 
-    ```
-    Feature: Test DrupalContext
-      In order to prove the Behat is working correctly in Drupal VM
-      As a developer
-      I need to run a simple interface test
+        Feature: Test DrupalContext
+          In order to prove the Behat is working correctly in Drupal VM
+          As a developer
+          I need to run a simple interface test
+        
+          Scenario: Viewing content in a region
+            Given I am on the homepage
+            Then I should see "No front page content has been created yet" in the "content"
 
-      Scenario: Viewing content in a region
-        Given I am on the homepage
-        Then I should see "No front page content has been created yet" in the "content"
-
-    ```
-  
   4. Now, inside Drupal VM, change directory to `/var/www/drupal` again, and run the command `behat` (which runs all the tests you've created—which should just be one so far).
 
 If everything was done correctly, you should see:
 
-```
+```console
 $ behat
 Feature: Test DrupalContext
   In order to prove the Behat is working correctly in Drupal VM
